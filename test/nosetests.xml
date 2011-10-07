@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="UTF-8"?><testsuite name="nosetests" tests="2" errors="0" failures="0" skip="0"><testcase classname="__main__" name="test_get_attributes" time="0" /><testcase classname="__main__" name="test_EasyEncoder" time="0" /></testsuite>
