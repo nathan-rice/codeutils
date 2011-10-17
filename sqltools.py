@@ -11,7 +11,7 @@ def safe_int(value):
         return None
 
 def safe_bool(value):
-    if value in ("True", True):
+    if value in ("True", "true", True):
         return True
     else:
         return False
@@ -30,4 +30,5 @@ _column_converters = {
     "Integer":safe_int,
     "Float":safe_float,
     "Boolean":safe_bool,
+    "BigInteger":safe_int
 }
