@@ -5,16 +5,12 @@ Created on Sep 13, 2011
 '''
 
 import inspect
-import collections
 import re
 import types
 import datetime
-from simplejson import JSONEncoder
 import simplejson
-import sys
 import cProfile
 
-sys.setrecursionlimit(5000)
 
 def get_module_classes(module):
     is_member = lambda m: getattr(m, "__module__", None) == module.__name__ and inspect.isclass(m)
@@ -40,33 +36,9 @@ def underscore_to_titlecase(name):
     return "".join(n.lower() for n in name.split("_")).title()
 
 
-class EasyEncoder(JSONEncoder):
-    '''
-    JSON encoder that handles custom classes fairly gracefully.
-    '''
-
-    def __init__(self, *args, **kwargs):
-        super(EasyEncoder, self).__init__(*args, **kwargs)
-        self._seen_registry = set()
-
-    def default(self, o):
-        try:
-            if hasattr(o, 'isoformat'):
-                return o.isoformat()
-            if isinstance(o, collections.Mapping):
-                return {k:v for (k, v) in o.items() if id(v) not in self._seen_registry}
-            elif isinstance(o, collections.Iterable):
-                return list(i for i in o if id(i) not in self._seen_registry)
-            else:
-                attributes = get_attributes(o)
-                for v in attributes.values():
-                    if not isinstance(o, (basestring, int, float)):
-                        self._seen_registry.add(id(o))
-                attributes = {k:v for (k, v) in attributes.items() if id(v) not in self._seen_registry}
-                return attributes
-        except TypeError:
-            return JSONEncoder.default(self, o)
-
+class Raw(str):
+    def __new__(self, o):
+        return str.__new__(Raw, o)
 
 def dumps(o):
     enc = BoundedGoodEncoder()
@@ -89,7 +61,8 @@ class GoodEncoder(object):
             bool: self._bool_encoder,
             types.NoneType: self._none_encoder,
             datetime.datetime: self._datetime_encoder,
-            object: self._default_encoder
+            object: self._default_encoder,
+            Raw: self._raw_encoder
         }
         self.initiator_map = {
             dict: lambda x: "{",
@@ -138,7 +111,7 @@ class GoodEncoder(object):
                 start = False
             else:
 #                yield self.item_separator
-                yield ":"
+                yield ","
             for i in self.get_map_entry(k, self.micro_encoder_map):
                 yield i
 #            yield self.map_separator
@@ -192,6 +165,9 @@ class GoodEncoder(object):
     def encode(self, o):
         gen = tuple(self.get_map_entry(o, self.micro_encoder_map))
         return ''.join(gen)
+
+    def _raw_encoder(self, o):
+        yield o
 
     # small optimizations here
     _list_encoder = _set_encoder = _tuple_encoder = _iterable_encoder

@@ -15,7 +15,6 @@ class InitMixin(object):
             setattr(self, key, value)
         super(InitMixin, self).__init__()
 
-
 class ReprMixin(object):
 
     def _format(self, v):
