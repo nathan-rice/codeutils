@@ -22,7 +22,7 @@ class ReprMixin(object):
             v = "'%s'" % v
             return v.encode("utf-8", errors="ignore")
         else:
-            return v
+            return str(v)
 
     def __repr__(self):
         attribute_string = ", ".join("%s=%s" % (k[0], self._format(k[1])) for k in get_attributes(self).items())

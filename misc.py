@@ -33,8 +33,10 @@ def underscore_to_camelcase(name):
     return "".join(n.title() for n in name.split("_"))
 
 def underscore_to_titlecase(name):
-    return "".join(n.lower() for n in name.split("_")).title()
+    return " ".join(n.lower() for n in name.split("_")).title()
 
+#def underscore_to_sentence(name):
+#    return " ".join(n.lower() for n in name.split("_")).title()
 
 class Raw(str):
     def __new__(self, o):
