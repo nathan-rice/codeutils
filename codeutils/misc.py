@@ -33,7 +33,7 @@ def underscore_to_titlecase(name):
     return "".join(n.lower() for n in name.split("_")).title()
 
 def underscore_to_sentence(name):
-    return "".join(n.lower() for n in name.split("_")).title()
+    return " ".join(n.lower() for n in name.split("_")).title()
 
 
 class Raw(str):
