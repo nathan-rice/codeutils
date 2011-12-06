@@ -13,39 +13,52 @@ def get_module_classes(module):
     is_member = lambda m: getattr(m, "__module__", None) == module.__name__ and inspect.isclass(m)
     return inspect.getmembers(module, is_member)
 
+
 def get_attributes(o):
     attributes = [
-        (a, getattr(o, a)) for a in getattr(o, "__attributes__", None) or
-        set(dir(o)).difference(dir(object)) if a[0] != "_"
+    (a, getattr(o, a)) for a in getattr(o, "__attributes__", None) or
+                                set(dir(o)).difference(dir(object)) if a[0] != "_"
     ]
-    return {a[0]:a[1] for a in attributes if not callable(a[1])}
+    return {a[0]: a[1] for a in attributes if not callable(a[1])}
+
 
 def camelcase_to_underscore(name):
     return "_".join(n.lower() for n in re.findall(r"[A-Z]+[a-z0-9]*", name))
 
+
 def camelcase_to_sentence(name):
     return " ".join(n.lower() for n in re.findall(r"[A-Z]+[a-z0-9]*", name)).title()
+
 
 def underscore_to_camelcase(name):
     return "".join(n.title() for n in name.split("_"))
 
+
 def underscore_to_titlecase(name):
     return "".join(n.lower() for n in name.split("_")).title()
+
 
 def underscore_to_sentence(name):
     return " ".join(n.lower() for n in name.split("_")).title()
 
 
-class Raw(str):
-    def __new__(self, o):
-        return str.__new__(Raw, o)
+class DispatchDict(dict):
+    def __getitem__(self, class_):
+        if isinstance(class_, type):
+            mro = class_.__mro__
+        else:
+            mro = type(class_).__mro__
+        for type_ in mro:
+            translator = dict.get(self, type_)
+            if translator != None:
+                # Let's see if we cache the type
+                if type_ != mro[0]:
+                    dict.__setitem__(self, mro[0], translator)
+                return translator
+        raise KeyError("No translator found for %s" % class_)
 
-def dumps(o):
-    enc = BoundedGoodEncoder()
-    return enc.encode(o)
 
 class GoodEncoder(object):
-
     def __init__(self):
         self.micro_encoder_map = {
             dict: self._dict_encoder,
@@ -103,56 +116,56 @@ class GoodEncoder(object):
         yield "'"
 
     def _dict_encoder(self, o):
-#        yield self.get_map_entry(o, self.initiator_map)
+    #        yield self.get_map_entry(o, self.initiator_map)
         yield "{"
         start = True
         for (k, v) in o.items():
             if start:
                 start = False
             else:
-#                yield self.item_separator
+            #                yield self.item_separator
                 yield ","
             for i in self.get_map_entry(k, self.micro_encoder_map):
                 yield i
-#            yield self.map_separator
+            #            yield self.map_separator
             yield ":"
             for i in self.get_map_entry(v, self.micro_encoder_map):
                 yield i
-#        yield self.get_map_entry(o, self.terminator_map)
+            #        yield self.get_map_entry(o, self.terminator_map)
         yield "}"
 
     def _default_encoder(self, o):
-#        yield self.get_map_entry(o, self.initiator_map)
+    #        yield self.get_map_entry(o, self.initiator_map)
         yield "{"
         start = True
         for (k, v) in get_attributes(o).items():
             if start:
                 start = False
             else:
-#                yield self.item_separator
+            #                yield self.item_separator
                 yield ","
             for i in self.get_map_entry(k, self.micro_encoder_map):
                 yield i
-#            yield self.map_separator
+            #            yield self.map_separator
             yield ":"
             for i in self.get_map_entry(v, self.micro_encoder_map):
                 yield i
-#        yield self.get_map_entry(o, self.terminator_map)
+            #        yield self.get_map_entry(o, self.terminator_map)
         yield "}"
 
     def _iterable_encoder(self, o, True=True, False=False):
-#        yield self.get_map_entry(o, self.initiator_map)
+    #        yield self.get_map_entry(o, self.initiator_map)
         yield "["
         start = True
         for e in o:
             if start:
                 start = False
             else:
-#                yield self.item_separator
+            #                yield self.item_separator
                 yield ","
             for i in self.get_map_entry(e, self.micro_encoder_map):
                 yield i
-#        yield self.get_map_entry(o, self.terminator_map)
+            #        yield self.get_map_entry(o, self.terminator_map)
         yield "]"
 
     def get_map_entry(self, o, map):
@@ -176,7 +189,6 @@ class GoodEncoder(object):
 
 
 class BoundedGoodEncoder(GoodEncoder):
-
     def __init__(self):
         super(BoundedGoodEncoder, self).__init__()
         self._seen = set()
@@ -215,7 +227,7 @@ class BoundedGoodEncoder(GoodEncoder):
 
 
 class TestObject(object):
-    def __init__(self, a, b , c):
+    def __init__(self, a, b, c):
         self.foo = a
         self.bar = b
         self.baz = c
@@ -229,7 +241,8 @@ if __name__ == "__main__":
     b = []
     a.append(b)
     b.append(a)
-    print foo.encode([test1, datetime.datetime(2010, 1, 1), {1:"A", 2:"B", 3:True, 4:None, 5:["a", "b", 1.145]}, "3", 4])
+    print foo.encode(
+        [test1, datetime.datetime(2010, 1, 1), {1: "A", 2: "B", 3: True, 4: None, 5: ["a", "b", 1.145]}, "3", 4])
     testdata = []
     data1 = [1, 1.01, 'hello world', True, None, -1, 11.011, "~!@#$%^&*()_+|", False, None]
     data2 = {}
