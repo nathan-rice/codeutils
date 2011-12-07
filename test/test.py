@@ -49,11 +49,5 @@ def misc__DispatchDict():
     assert dd[Bogus] == 0
 
 
-@nottest
-def test_EasyEncoder():
-    test_object = TestClass("one", [TestClass(1, 2, 3), TestClass(True, False, None)], TestClass("a", "b", "c"))
-    assert dumps(test_object,
-        cls=InstanceEncoder) == '{"a_three": {"a_three": "c", "a_one": "a", "a_two": "b"}, "a_one": "one", "a_two": [{"a_three": 3, "a_one": 1, "a_two": 2}, {"a_three": null, "a_one": true, "a_two": false}]}'
-
 if __name__ == "__main__":
     nose.runmodule(argv=["-d", "-s", "--with-xunit"])

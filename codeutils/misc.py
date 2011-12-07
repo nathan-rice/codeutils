@@ -13,7 +13,6 @@ def get_module_classes(module):
     is_member = lambda m: getattr(m, "__module__", None) == module.__name__ and inspect.isclass(m)
     return inspect.getmembers(module, is_member)
 
-
 def get_attributes(o):
     attributes = [
     (a, getattr(o, a)) for a in getattr(o, "__attributes__", None) or
@@ -21,28 +20,26 @@ def get_attributes(o):
     ]
     return {a[0]: a[1] for a in attributes if not callable(a[1])}
 
-
 def camelcase_to_underscore(name):
     return "_".join(n.lower() for n in re.findall(r"[A-Z]+[a-z0-9]*", name))
-
 
 def camelcase_to_sentence(name):
     return " ".join(n.lower() for n in re.findall(r"[A-Z]+[a-z0-9]*", name)).title()
 
-
 def underscore_to_camelcase(name):
     return "".join(n.title() for n in name.split("_"))
-
 
 def underscore_to_titlecase(name):
     return "".join(n.lower() for n in name.split("_")).title()
 
-
 def underscore_to_sentence(name):
     return " ".join(n.lower() for n in name.split("_")).title()
 
-
 class DispatchDict(dict):
+
+    def __call__(self, class_):
+        return self.__getitem__(class_)(class_)
+
     def __getitem__(self, class_):
         if isinstance(class_, type):
             mro = class_.__mro__
@@ -74,8 +71,7 @@ class GoodEncoder(object):
             bool: self._bool_encoder,
             types.NoneType: self._none_encoder,
             datetime.datetime: self._datetime_encoder,
-            object: self._default_encoder,
-            Raw: self._raw_encoder
+            object: self._default_encoder
         }
         self.initiator_map = {
             dict: lambda x: "{",
