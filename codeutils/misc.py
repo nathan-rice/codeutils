@@ -24,16 +24,19 @@ def camelcase_to_underscore(name):
     return "_".join(n.lower() for n in re.findall(r"[A-Z]+[a-z0-9]*", name))
 
 def camelcase_to_sentence(name):
-    return " ".join(n.lower() for n in re.findall(r"[A-Z]+[a-z0-9]*", name)).title()
+    return " ".join(re.findall(r"[A-Z]+[a-z0-9]*", name)).capitalize()
+
+def camelcase_to_title(name):
+    return " ".join(re.findall(r"[A-Z]+[a-z0-9]*", name)).title()
 
 def underscore_to_camelcase(name):
-    return "".join(n.title() for n in name.split("_"))
+    return "".join(n.capitalize() for n in name.split("_"))
 
-def underscore_to_titlecase(name):
-    return "".join(n.lower() for n in name.split("_")).title()
+def underscore_to_titlecase(name): # Rename to underscore_to_title in pycharm
+    return "".join(name.split("_")).title()
 
 def underscore_to_sentence(name):
-    return " ".join(n.lower() for n in name.split("_")).title()
+    return " ".join(name.split("_")).capitalize()
 
 class DispatchDict(dict):
 
