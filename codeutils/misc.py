@@ -8,6 +8,12 @@ import inspect
 import re
 import types
 import datetime
+import sys
+
+if sys.version_info < (3, 0):
+    iterator_next = "next"
+else:
+    iterator_next = "__next__"
 
 def get_module_classes(module):
     is_member = lambda m: getattr(m, "__module__", None) == module.__name__ and inspect.isclass(m)
@@ -38,24 +44,43 @@ def underscore_to_titlecase(name): # Rename to underscore_to_title in pycharm
 def underscore_to_sentence(name):
     return " ".join(name.split("_")).capitalize()
 
-class DispatchDict(dict):
+class AbstractDispatchDict(dict):
+    """
+    This
+    """
 
-    def __call__(self, class_):
-        return self.__getitem__(class_)(class_)
+    def __call__(self, key):
+        """
+        because AbstractDispatchDicts are callable, any nested AbstractDispatchDicts
+        in values will propagate the lookup, allowing you to form dispatch trees. 
+        """
+        return self.__getitem__(key)(key)
 
-    def __getitem__(self, class_):
-        if isinstance(class_, type):
-            mro = class_.__mro__
-        else:
-            mro = type(class_).__mro__
-        for type_ in mro:
-            translator = dict.get(self, type_)
-            if translator != None:
-                # Let's see if we cache the type
-                if type_ != mro[0]:
-                    dict.__setitem__(self, mro[0], translator)
+    def __getitem__(self, key):
+        global iterator_next
+        key_closure = self.key_closure(key)
+        first_key = getattr(key_closure, iterator_next)()
+        def get_target():
+            for key in key_closure:
+                translator = dict.get(self, key)
+                if translator != None:
+                    dict.__setitem__(self, first_key, translator)
                 return translator
-        raise KeyError("No translator found for %s" % class_)
+            raise KeyError("No dispatch target found for %s" % key)
+        return dict.get(self, first_key) or get_target()
+
+    @classmethod
+    def key_closure(self, key):
+        return NotImplemented
+
+
+class DispatchDict(AbstractDispatchDict):
+
+    @classmethod
+    def key_closure(cls, k):
+        mro = isinstance(k, type) and k.__mro__ or type(k).__mro__
+        for class_ in mro:
+            yield class_
 
 
 class GoodEncoder(object):
