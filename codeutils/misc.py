@@ -9,6 +9,7 @@ import re
 import types
 import datetime
 import sys
+from hashlib import sha512
 
 if sys.version_info < (3, 0):
     iterator_next = "next"
@@ -44,17 +45,25 @@ def underscore_to_titlecase(name): # Rename to underscore_to_title in pycharm
 def underscore_to_sentence(name):
     return " ".join(name.split("_")).capitalize()
 
+
+def chainedhash(*args):
+    hash_ = lambda x, y: sha512(sha512(x).hexdigest() + y).hexdigest()
+    return reduce(hash_, args)
+
+
+
+
 class AbstractDispatchDict(dict):
     """
     This
     """
 
-    def __call__(self, key):
+    def __call__(self, key, *args, **kwargs):
         """
         because AbstractDispatchDicts are callable, any nested AbstractDispatchDicts
         in values will propagate the lookup, allowing you to form dispatch trees. 
         """
-        return self.__getitem__(key)(key)
+        return self.__getitem__(key)(key, *args, **kwargs)
 
     def __getitem__(self, key):
         global iterator_next
