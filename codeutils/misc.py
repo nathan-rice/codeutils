@@ -45,6 +45,11 @@ def underscore_to_titlecase(name): # Rename to underscore_to_title in pycharm
 def underscore_to_sentence(name):
     return " ".join(name.split("_")).capitalize()
 
+def first_type(o):
+    """Gives the class of `o` or returns `o` if it is an instance of type."""
+    return isinstance(o, type) and o or type(o)
+
+
 
 def chainedhash(*args):
     hash_ = lambda x, y: sha512(sha512(x).hexdigest() + y).hexdigest()
@@ -74,7 +79,7 @@ class AbstractDispatchDict(dict):
                 translator = dict.get(self, key)
                 if translator != None:
                     dict.__setitem__(self, first_key, translator)
-                return translator
+                    return translator
             raise KeyError("No dispatch target found for %s" % key)
         return dict.get(self, first_key) or get_target()
 
