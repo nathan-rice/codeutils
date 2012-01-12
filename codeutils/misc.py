@@ -49,7 +49,10 @@ def first_type(o):
     """Gives the class of `o` or returns `o` if it is an instance of type."""
     return isinstance(o, type) and o or type(o)
 
-
+def find(f, seq):
+    """Return first item in sequence where f(item) == True."""
+    for it in (item for item in seq if f(item)):
+        return it
 
 def chainedhash(*args):
     hash_ = lambda x, y: sha512(sha512(x).hexdigest() + y).hexdigest()
@@ -87,7 +90,6 @@ class AbstractDispatchDict(dict):
     def key_closure(self, key):
         return NotImplemented
 
-
 class DispatchDict(AbstractDispatchDict):
 
     @classmethod
@@ -95,7 +97,6 @@ class DispatchDict(AbstractDispatchDict):
         mro = isinstance(k, type) and k.__mro__ or type(k).__mro__
         for class_ in mro:
             yield class_
-
 
 class GoodEncoder(object):
     def __init__(self):
