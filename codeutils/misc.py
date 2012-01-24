@@ -10,6 +10,7 @@ import types
 import datetime
 import sys
 from hashlib import sha512
+from abc import ABCMeta, abstractmethod
 
 if sys.version_info < (3, 0):
     iterator_next = "next"
@@ -58,7 +59,13 @@ def chainedhash(*args):
     hash_ = lambda x, y: sha512(sha512(x).hexdigest() + y).hexdigest()
     return reduce(hash_, args)
 
+class Dispatchable(object):
+    """Ancestor for all dispatchable objects"""
+    __metaclass__ = ABCMeta
 
+    @abstractmethod
+    def __call__(self, *args, **kwargs):
+        return NotImplemented
 
 
 class AbstractDispatchDict(dict):
@@ -71,7 +78,14 @@ class AbstractDispatchDict(dict):
         because AbstractDispatchDicts are callable, any nested AbstractDispatchDicts
         in values will propagate the lookup, allowing you to form dispatch trees. 
         """
-        return self.__getitem__(key)(key, *args, **kwargs)
+        # Note that constructors behaving in this way is somewhat unintuitive.
+        # Unfortunately, we cannot exclude type from this behavior because things
+        # like str and int are types.
+        item = self.__getitem__(key)
+        if callable(item):
+            return self.__getitem__(key)(key, *args, **kwargs)
+        else:
+            return item
 
     def __getitem__(self, key):
         global iterator_next
